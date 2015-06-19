@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
- 
+
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Stream My Aquarium</title>
- 
+  <title>Stream</title>
+
   <!-- Bootstrap CSS -->
   <link href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
- 
+
   <style type="text/css">
   #stream {
     height: 99%;
@@ -18,7 +18,7 @@
     margin-top: 20px;
   }
   </style>
- 
+
   <!-- jQuery -->
   <script src="http://code.jquery.com/jquery.js"></script>
   <!-- Bootstrap JavaScript -->
@@ -30,27 +30,61 @@
     $('#stream').attr('src', url);
     $('.start').hide();
   });
- 
+
+  socket.on('image', function(data) {
+    var uint8Arr = new Uint8Array(data.buffer);
+    var binary = '';
+    for (var i = 0; i < uint8Arr.length; i++) {
+      binary += String.fromCharCode(uint8Arr[i]);
+    }
+    var base64String = window.btoa(binary);
+
+    var img = new Image();
+    img.onload = function() {
+      var canvas = document.getElementById('canvas');
+      var ctx = canvas.getContext('2d');
+      var x = 0, y = 0;
+      ctx.drawImage(this, x, y);
+    }
+    img.src = 'data:image/png;base64,' + base64String;
+  });
+
+  socket.on('text', function(data) {
+    console.log(data.text);
+    $("p").text(data.text);
+  });
+
   function startStream() {
-    socket.emit('start-stream');
+    // socket.emit('start-stream');
+    // $('.start').hide();
+    socket.emit('start-image');
+    $('.start').hide();
+  }
+  function startText() {
+    // socket.emit('start-stream');
+    // $('.start').hide();
+    socket.emit('start-text');
     $('.start').hide();
   }
   </script>
 </head>
- 
+
 <body class="container">
-  <h1 class="text-center">My Aquarium
-    <small>Powered by PI</small>
+  <h1 class="text-center">My
+    <small>Powered </small>
   </h1>
- 
+
   <hr>
- 
+
   <button type="button" id="" class="btn btn-info start" onclick="startStream()">Start Camera</button>
- 
+  <button type="button" id="" class="btn btn-info start" onclick="startText()">Start Text</button>
+
   <div class="row">
-    <img src="" id="stream">
+    <!-- <img src="" id="stream"> -->
+    <canvas id="canvas"></canvas>
+    <p id="text"></p>
   </div>
- 
+
 </body>
- 
+
 </html>

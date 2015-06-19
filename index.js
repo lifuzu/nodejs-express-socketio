@@ -2,6 +2,7 @@ var express = require('express');
 var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
+var ss = require('socket.io-stream');
 var fs = require('fs');
 var gm = require('gm').subClass({imageMagick: true});
 var path = require('path');
@@ -37,7 +38,18 @@ io.on('connection', function(socket) {
   socket.on('start-stream', function() {
     startStreaming(io);
   });
- 
+
+  socket.on('start-image', function() {
+    startImaging(io);
+  });
+
+  socket.on('start-text', function() {
+    startTexting(io);
+  });
+
+  ss(socket).on('stream', function(stream) {
+    realStreaming(stream);
+  })
 });
  
 http.listen(3000, function() {
@@ -51,11 +63,10 @@ function stopStreaming() {
     fs.unwatchFile('./stream/image_stream.jpg');
   }
 }
- 
-function startStreaming(io) {
- 
+
+function realStreaming (stream) {
   if (app.get('watchingFile')) {
-    io.sockets.emit('liveStream', 'image_stream.jpg?_t=' + (Math.random() * 100000));
+    fs.createReadStream('./stream/image_stream.jpg').pipe(stream);
     return;
   }
  
@@ -74,7 +85,115 @@ function startStreaming(io) {
   app.set('watchingFile', true);
  
   fs.watchFile('./stream/image_stream.jpg', function(current, previous) {
-    io.sockets.emit('liveStream', 'image_stream.jpg?_t=' + (Math.random() * 100000));
-  })  
+    fs.createReadStream('./stream/image_stream.jpg').pipe(stream);
+  })
+}
+
+function startImaging(io) {
+
+  if (app.get('watchingFile')) {
+    fs.readFile('./stream/image_stream.jpg', function(err, buffer) {
+      if (err) console.log(err);
+      else {
+        io.sockets.emit('image', { buffer: buffer });
+        return;
+      }
+    });
+  }
+
+  var i = 0;
+  setInterval(function() {
+    gm(100, 100, "#ddff99f3")
+    .drawText(10, 50, "Hello " + i)
+    .toBuffer('jpg',function (err, buffer) {
+      if (err) return console.log(err);
+      io.sockets.emit('image', { buffer: buffer });
+      console.log('done!');
+    })
+    // .write("./stream/image_stream.jpg", function(err) {
+    //   if (err) console.log(err);
+    // });
+    i = i+1;
+  }, 20);
+
+  console.log('Watching for changes...');
+
+  app.set('watchingFile', true);
+
+  fs.watchFile('./stream/image_stream.jpg', function(current, previous) {
+    fs.readFile('./stream/image_stream.jpg', function(err, buffer) {
+      if (err) console.log(err);
+      else {
+        io.sockets.emit('image', { buffer: buffer });
+        return;
+      }
+    });
+  })
+
+}
+
+function startTexting(io) {
+  if (app.get('watchingFile')) {
+    fs.readFile('./stream/image_stream.txt', function(err, text) {
+      if (err) console.log(err);
+      else {
+        io.sockets.emit('text', { text: text });
+        console.log('Emit 1 ' + text);
+        return;
+      }
+    });
+  }
+
+  var i = 0;
+  setInterval(function() {
+    fs.writeFile('./stream/image_stream.txt', 'Hello ' + i, function (err) {
+      if (err) throw err;
+      console.log('Hello ' + i);
+      io.sockets.emit('text', { text: 'Hello ' + i });
+    });
+    i = i+1;
+  }, 1000);
+
+  console.log('Watching for changes...');
+
+  app.set('watchingFile', true);
+
+  // fs.watchFile('./stream/image_stream.txt', function(current, previous) {
+  //   fs.readFile('./stream/image_stream.txt', function(err, text) {
+  //     if (err) console.log(err);
+  //     else {
+  //       io.sockets.emit('text', { text: text });
+  //       console.log('Emit ' + text);
+  //       return;
+  //     }
+  //   });
+  // })
  
+}
+
+function startStreaming(io) {
+
+  if (app.get('watchingFile')) {
+    io.sockets.emit('liveStream', 'image_stream.jpg?_t=' + (Math.random() * 100000));
+    return;
+  }
+
+  var i = 0;
+  setInterval(function() {
+    gm(100, 100, "#ddff99f3")
+    .drawText(10, 50, "Hello " + i)
+    .write("./stream/image_stream.jpg", function(err) {
+      if (err) console.log(err);
+    });
+    i = i+1;
+  }, 1000);
+
+  console.log('Watching for changes...');
+
+  app.set('watchingFile', true);
+
+  fs.watchFile('./stream/image_stream.jpg', function(current, previous) {
+    io.sockets.emit('liveStream', 'image_stream.jpg?_t=' + (Math.random() * 100000));
+  })
+
 }
