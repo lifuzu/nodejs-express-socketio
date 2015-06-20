@@ -66,6 +66,12 @@
     socket.emit('start-text');
     $('.start').hide();
   }
+  function startRandom() {
+    // socket.emit('start-stream');
+    // $('.start').hide();
+    socket.emit('start-random');
+    $('.start').hide();
+  }
   </script>
 </head>
 
@@ -78,6 +84,7 @@
 
   <button type="button" id="" class="btn btn-info start" onclick="startStream()">Start Camera</button>
   <button type="button" id="" class="btn btn-info start" onclick="startText()">Start Text</button>
+  <button type="button" id="" class="btn btn-info start" onclick="startRandom()">Start Random</button>
 
   <div class="row">
     <!-- <img src="" id="stream"> -->

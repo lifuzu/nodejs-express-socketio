@@ -6,6 +6,7 @@ var ss = require('socket.io-stream');
 var fs = require('fs');
 var gm = require('gm').subClass({imageMagick: true});
 var path = require('path');
+var Random = require("random-js");
  
 var spawn = require('child_process').spawn;
 var proc;
@@ -45,6 +46,10 @@ io.on('connection', function(socket) {
 
   socket.on('start-text', function() {
     startTexting(io);
+  });
+
+  socket.on('start-random', function() {
+    startRandom(io);
   });
 
   ss(socket).on('stream', function(stream) {
@@ -169,6 +174,15 @@ function startTexting(io) {
   //   });
   // })
  
+}
+
+function startRandom(io) {
+  var random = new Random(Random.engines.mt19937().autoSeed());
+
+  setInterval(function() {
+    var value = random.integer(1, 100);
+    io.sockets.emit('text', { text: value });
+  }, 1000);
 }
 
 function startStreaming(io) {
