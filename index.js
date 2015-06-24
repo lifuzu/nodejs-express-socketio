@@ -180,7 +180,7 @@ function startRandom(io) {
   var random = new Random(Random.engines.mt19937().autoSeed());
 
   setInterval(function() {
-    var value = random.integer(1, 100);
+    var value = random.integer(0, 99999);
     io.sockets.emit('text', { text: value });
   }, 1000);
 }
