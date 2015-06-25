@@ -28,8 +28,8 @@
   var socket = io();
 
   socket.on('text', function(data) {
-    console.log(data.hello);
-    $("p").text(data.hello);
+    console.log(data.text);
+    $("p").text(data.text);
   });
 
   function startText() {
