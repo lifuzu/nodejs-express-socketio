@@ -26,72 +26,35 @@
   <script src="/socket.io/socket.io.js"></script>
   <script>
   var socket = io();
-  socket.on('liveStream', function(url) {
-    $('#stream').attr('src', url);
-    $('.start').hide();
-  });
-
-  socket.on('image', function(data) {
-    var uint8Arr = new Uint8Array(data.buffer);
-    var binary = '';
-    for (var i = 0; i < uint8Arr.length; i++) {
-      binary += String.fromCharCode(uint8Arr[i]);
-    }
-    var base64String = window.btoa(binary);
-
-    var img = new Image();
-    img.onload = function() {
-      var canvas = document.getElementById('canvas');
-      var ctx = canvas.getContext('2d');
-      var x = 0, y = 0;
-      ctx.drawImage(this, x, y);
-    }
-    img.src = 'data:image/png;base64,' + base64String;
-  });
 
   socket.on('text', function(data) {
-    console.log(data.text);
-    $("p").text(data.text);
+    console.log(data.hello);
+    $("p").text(data.hello);
   });
 
-  function startStream() {
-    // socket.emit('start-stream');
-    // $('.start').hide();
-    socket.emit('start-image');
-    $('.start').hide();
-  }
   function startText() {
     // socket.emit('start-stream');
     // $('.start').hide();
-    socket.emit('start-text');
-    $('.start').hide();
-  }
-  function startRandom() {
-    // socket.emit('start-stream');
+    // socket.emit('start-text');
     // $('.start').hide();
-    socket.emit('start-random');
+    socket.emit('time', new Date());
     $('.start').hide();
   }
   </script>
 </head>
 
 <body class="container">
-  <h1 class="text-center">My
-    <small>Powered </small>
+  <h1 class="text-center">
+    <small> </small>
   </h1>
 
   <hr>
 
-  <button type="button" id="" class="btn btn-info start" onclick="startStream()">Start Camera</button>
   <button type="button" id="" class="btn btn-info start" onclick="startText()">Start Text</button>
-  <button type="button" id="" class="btn btn-info start" onclick="startRandom()">Start Random</button>
 
   <div class="row">
-    <!-- <img src="" id="stream"> -->
-    <canvas id="canvas"></canvas>
     <p id="text"></p>
   </div>
 
 </body>
-
 </html>
