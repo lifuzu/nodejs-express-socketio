@@ -1,23 +1,10 @@
-var express = require('express');
-var app = express();
+var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
-var redis = require('socket.io-redis');
-var fs = require('fs');
-var path = require('path');
-// var Random = require("random-js");
 
-io.adapter(redis({ host: 'localhost', port: '6379' }));
+var events = require('events'),
+    serverEmitter = new events.EventEmitter();
 
-app.use('/', express.static(path.join(__dirname, 'stream')));
- 
- 
-app.get('/', function(req, res) {
-  res.sendFile(__dirname + '/index.html');
-});
- 
-var sockets = {};
- 
 io.on('connection', function(socket) {
  
   sockets[socket.id] = socket;
@@ -41,19 +28,19 @@ io.on('connection', function(socket) {
   socket.on('time', function(data) {
     console.log("hello time!");
     console.log(data);
-    io.sockets.emit('text', { text: 98 });
+  });
+
+  serverEmitter.on('newFeed', function (data) {
+    // this message will be sent to all connected users
+    console.log(data);
+    socket.emit('time', data);
   });
 });
- 
+
+// sometime in the future the server will emit one or more newFeed events
+serverEmitter.emit('newFeed', "data");
+
 http.listen(3000, function() {
   console.log('listening on *:3000');
+  serverEmitter.emit('newFeed', "data");
 });
-
-// function startRandom(io) {
-//   var random = new Random(Random.engines.mt19937().autoSeed());
-
-//   setInterval(function() {
-//     var value = random.integer(0, 99999);
-//     io.sockets.emit('text', { text: value });
-//   }, 1000);
-// }
